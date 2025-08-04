@@ -1,8 +1,6 @@
 from collections import Counter
 import pandas as pd
-from src.Load_data import LoadData
 
-df = LoadData.csv_to_df(r'C:\Users\shuki\Desktop\analize_tweet\data\tweet_dataset.csv')
 class DataAnalyzer:
     def __init__(self, data: pd.DataFrame):
         self.df = data
@@ -67,6 +65,6 @@ if __name__ == '__main__':
     a = DataAnalyzer(df)
     print(a.category_count())
     print(a.average_tweet())
-    print(a.common_ten_word())
     print(a.three_longest_tweets())
+    print(a.common_ten_word())
     print(a.uppercase_words())
