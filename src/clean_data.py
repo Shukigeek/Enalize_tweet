@@ -1,9 +1,9 @@
 import re
 
 import pandas as pd
-from src.Load_data import LoadData
 
-df = LoadData.csv_to_df(r'C:\Users\shuki\Desktop\analize_tweet\data\tweet_dataset.csv')
+
+
 class Clean:
     def __init__(self,data:pd.DataFrame):
         self.clean_df = data
@@ -31,7 +31,3 @@ class Clean:
         self.clean_df = self.clean_df[self.clean_df['Biased'].isin([0, 1])]
         return self
 
-if __name__ == '__main__':
-
-    a  = Clean(df)
-    print(a.save_relevant_column().delete_comma().change_to_lowercase().drop_not_biased().clean_df.head(10))

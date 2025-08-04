@@ -1,6 +1,8 @@
 from collections import Counter
 import pandas as pd
+from src.Load_data import LoadData
 
+df = LoadData.csv_to_df(r'C:\Users\shuki\Desktop\analize_tweet\data\tweet_dataset.csv')
 class DataAnalyzer:
     def __init__(self, data: pd.DataFrame):
         self.df = data
@@ -29,10 +31,12 @@ class DataAnalyzer:
     # count the avg length of tweet per category
     def average_tweet(self):
         grouped = self.df.groupby('Biased')['word_count'].mean()
+        total = self.df['word_count'].mean()
         return {
             'antisemitic tweet len': float(grouped.loc[1]),
             'not antisemitic tweet len': float(grouped.loc[0]),
-            'undefined tweet len': float(self.df[~self.df['Biased'].isin([0, 1])]['word_count'].mean())
+            'undefined tweet len': float(self.df[~self.df['Biased'].isin([0, 1])]['word_count'].mean()),
+            'total tweet len':float(total)
         }
 
     # holds the three longest tweet per category
@@ -60,11 +64,3 @@ class DataAnalyzer:
             'not_antisemitic': int(grouped.loc[0]),
             'undefined': int(self.df[~self.df['Biased'].isin([0, 1])]['uppercase_words'].sum())
         }
-if __name__ == '__main__':
-
-    a = DataAnalyzer(df)
-    print(a.category_count())
-    print(a.average_tweet())
-    print(a.three_longest_tweets())
-    print(a.common_ten_word())
-    print(a.uppercase_words())
