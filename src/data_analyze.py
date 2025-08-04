@@ -12,17 +12,34 @@ class DataAnalyzer:
 
     # counting the tweet in each category
     def category_count(self):
-        self.anti = int((self.df['Biased'] == 1).sum())
-        self.not_anti = int((self.df['Biased'] == 0).sum())
-        self.undefined = int((~self.df['Biased'].isin([0,1])).sum())
+        self.anti = self.df[self.df['Biased'] == 1]
+        self.anti_sum = int(self.anti['Biased'].count())
+
+        self.not_anti = self.df[self.df['Biased'] == 0]
+        self.not_anti_sum = int(self.not_anti['Biased'].count())
+
+        self.undefined = self.df[~self.df['Biased'].isin([0,1])]
+        self.undefined_sum = int(self.undefined['Biased'].count())
 
         return {
-            'anti':self.anti,
-            'not_anti':self.not_anti,
-            'undefined':self.undefined,
-            'total':self.anti + self.not_anti + self.undefined
+            'antisemitic':self.anti_sum,
+            'not_antisemitic':self.not_anti_sum,
+            'undefined':self.undefined_sum,
+            'total':self.anti_sum + self.not_anti_sum + self.undefined_sum
         }
+
+    # counting the length of each tweet per category
+    def average_tweet(self):
+        self.avg_len_anti = float(self.anti['Text'].apply(lambda x: len(str(x).split())).mean())
+        self.avg_len_not_anti = float(self.not_anti['Text'].apply(lambda x: len(str(x).split())).mean())
+        self.avg_len_undefined = float(self.undefined['Text'].apply(lambda x: len(str(x).split())).mean())
+        return {
+            'antisemitic tweet len': self.avg_len_anti,
+            'not antisemitic tweet len': self.avg_len_not_anti,
+            'undefined tweet len': self.avg_len_undefined
+            }
 
 
 a = DataAnalyzer(df)
 print(a.category_count())
+print(a.average_tweet())
