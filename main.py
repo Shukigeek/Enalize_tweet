@@ -1,16 +1,11 @@
-# This is a sample Python script.
+from src import clean_manager,analyze_manager
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+print('taking data and cleaning than writing to new csv')
+clean = clean_manager.ManagerClean()
+clean .write_to_csv()
+print('csv created successfully')
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print('analyzing data and writing to json all the analysis')
+analyze_data = analyze_manager.ManagerAnalyzer()
+analyze_data.write_to_json()
+print('json created successfully')
