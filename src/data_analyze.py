@@ -1,66 +1,72 @@
+from collections import Counter
 import pandas as pd
-from pandas import DataFrame
-
 from src.Load_data import LoadData
 
 df = LoadData.csv_to_df(r'C:\Users\shuki\Desktop\analize_tweet\data\tweet_dataset.csv')
-
 class DataAnalyzer:
-    # loading data at initialize
-    def __init__(self,data:DataFrame):
+    def __init__(self, data: pd.DataFrame):
         self.df = data
-        self.anti = self.df[self.df['Biased'] == 1].copy()
-        self.not_anti = self.df[self.df['Biased'] == 0].copy()
-        self.undefined = self.df[~self.df['Biased'].isin([0, 1])].copy()
 
-    # counting the tweet in each category
+        # new columns to count word and char and uppercase
+        self.df['word_count'] = self.df['Text'].apply(lambda x: len(str(x).split()))
+        self.df['char_count'] = self.df['Text'].apply(lambda x: len(str(x)))
+        self.df['uppercase_words'] = self.df['Text'].apply(
+            lambda x: sum(1 for word in str(x).split() if word.isupper())
+        )
+
+    # counts how many tweets is antisemitic and how many is not
     def category_count(self):
-        self.anti_sum = int(self.anti['Biased'].count())
-        self.not_anti_sum = int(self.not_anti['Biased'].count())
-        self.undefined_sum = int(self.undefined['Biased'].count())
+        counts = self.df['Biased'].value_counts(dropna=False)
+        antisemitic = counts.loc[1]
+        not_antisemitic = counts.loc[0]
+        undefined = self.df[~self.df['Biased'].isin([0, 1])].shape[0]
 
         return {
-            'antisemitic':self.anti_sum,
-            'not_antisemitic':self.not_anti_sum,
-            'undefined':self.undefined_sum,
-            'total':self.anti_sum + self.not_anti_sum + self.undefined_sum
+            'antisemitic': int(antisemitic),
+            'not_antisemitic': int(not_antisemitic),
+            'undefined': int(undefined),
+            'total': int(len(self.df))
         }
 
-    # counting the length of each tweet per category
+    # count the avg length of tweet per category
     def average_tweet(self):
-        self.avg_len_anti = float(self.anti['Text'].apply(lambda x: len(str(x).split())).mean())
-        self.avg_len_not_anti = float(self.not_anti['Text'].apply(lambda x: len(str(x).split())).mean())
-        self.avg_len_undefined = float(self.undefined['Text'].apply(lambda x: len(str(x).split())).mean())
+        grouped = self.df.groupby('Biased')['word_count'].mean()
         return {
-            'antisemitic tweet len': self.avg_len_anti,
-            'not antisemitic tweet len': self.avg_len_not_anti,
-            'undefined tweet len': self.avg_len_undefined
-            }
-
-    # find the 3 longest tweet by category
-    def three_longest_tweets(self):
-        self.anti['len'] = self.anti['Text'].apply(lambda x : len(str(x)))
-        self.three_longest_anti = self.anti.sort_values(by=['len'],ascending=False)[0:3]
-
-
-        self.not_anti['len'] = self.not_anti['Text'].apply(lambda x : len(str(x)))
-        self.three_longest_not_anti = self.not_anti.sort_values(by=['len'],ascending=False)[0:3]
-
-
-        self.undefined['len'] = self.undefined['Text'].apply(lambda x : len(str(x)))
-        self.three_longest_undefined = self.undefined.sort_values(by=['len'],ascending=False)[0:3]
-
-
-        return {
-            'longest three tweets': {
-                    'antisemitic':self.three_longest_anti['Text'].tolist(),
-                    'not antisemitic': self.three_longest_not_anti['Text'].tolist(),
-                    'undefined':self.three_longest_undefined['Text'].tolist()
-                    }
+            'antisemitic tweet len': float(grouped.loc[1]),
+            'not antisemitic tweet len': float(grouped.loc[0]),
+            'undefined tweet len': float(self.df[~self.df['Biased'].isin([0, 1])]['word_count'].mean())
         }
 
+    # holds the three longest tweet per category
+    def three_longest_tweets(self):
+        result = {}
+        for label, name in [(1, 'antisemitic'), (0, 'not antisemitic')]:
+            top = self.df[self.df['Biased'] == label].nlargest(3, 'char_count')['Text'].tolist()
+            result[name] = top
+        # undefined
+        undefined_top = self.df[~self.df['Biased'].isin([0, 1])].nlargest(3, 'char_count')['Text'].tolist()
+        result['undefined'] = undefined_top
 
-a = DataAnalyzer(df)
-print(a.category_count())
-print(a.average_tweet())
-print(a.three_longest_tweets())
+        return {'longest three tweets': result}
+
+    # hold the 10 must common words
+    def common_ten_word(self):
+        words = ' '.join(self.df['Text'].astype(str)).split()
+        return Counter(words).most_common(10)
+
+    # counts the uppercase words per category
+    def uppercase_words(self):
+        grouped = self.df.groupby('Biased')['uppercase_words'].sum()
+        return {
+            'antisemitic': int(grouped.loc[1]),
+            'not_antisemitic': int(grouped.loc[0]),
+            'undefined': int(self.df[~self.df['Biased'].isin([0, 1])]['uppercase_words'].sum())
+        }
+if __name__ == '__main__':
+
+    a = DataAnalyzer(df)
+    print(a.category_count())
+    print(a.average_tweet())
+    print(a.common_ten_word())
+    print(a.three_longest_tweets())
+    print(a.uppercase_words())
